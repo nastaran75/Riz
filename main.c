@@ -48,12 +48,15 @@
 
 /* Private variables ---------------------------------------------------------*/
 ADC_HandleTypeDef hadc1;
+ADC_HandleTypeDef hadc3;
 
 TIM_HandleTypeDef htim1;
 TIM_HandleTypeDef htim2;
 TIM_HandleTypeDef htim3;
+TIM_HandleTypeDef htim4;
 
 /* USER CODE BEGIN PV */
+//int BeforeStart=1;
 /* Private variables ---------------------------------------------------------*/
 
 typedef unsigned char byte;
@@ -68,7 +71,9 @@ static void MX_ADC1_Init(void);
 static void MX_TIM1_Init(void);
 static void MX_TIM2_Init(void);
 static void MX_TIM3_Init(void);
-                                    
+static void MX_TIM4_Init(void);
+static void MX_ADC3_Init(void);
+
 void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
                                 
                                 
@@ -163,6 +168,43 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc){
 	}
 }
 
+//void beforeStart(int LEDBlink,int BeforeStart){
+//		char str[1];
+//		setCursor(0,0);
+//		sprintf(str,"%03d",BeforeStart);	
+//		print(str);
+//	if(!BeforeStart)
+//		return;
+//	//Writing on LCD
+//	display();
+//	setCursor(5,0);
+//	print("DEATH RACE");
+//	setCursor(6,1);
+//	print("NASTARAN");
+//	setCursor(7,2);
+//	print("FATEME");		
+//	// End of writing on the LCD
+//	
+//	
+//	//Blinking LEDs
+//	
+//	__HAL_TIM_SET_COMPARE(&htim1,TIM_CHANNEL_1,LEDBlink);
+//	__HAL_TIM_SET_COMPARE(&htim1,TIM_CHANNEL_2,LEDBlink);
+//	__HAL_TIM_SET_COMPARE(&htim1,TIM_CHANNEL_3,LEDBlink);
+//	__HAL_TIM_SET_COMPARE(&htim1,TIM_CHANNEL_4,LEDBlink);
+//	__HAL_TIM_SET_COMPARE(&htim2,TIM_CHANNEL_1,LEDBlink);
+//	if(LEDBlink==100)
+//		LEDBlink=0;
+//	else LEDBlink = 100;
+//	
+//	//End Blinking LEDs
+//	
+//	HAL_Delay(500);
+//	noDisplay();
+//	HAL_Delay(500);
+//	beforeStart(LEDBlink,BeforeStart);
+//}
+
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
@@ -202,6 +244,8 @@ int main(void)
   MX_TIM1_Init();
   MX_TIM2_Init();
   MX_TIM3_Init();
+  MX_TIM4_Init();
+  MX_ADC3_Init();
   /* USER CODE BEGIN 2 */
 	
 	HAL_TIM_PWM_Start(&htim1,TIM_CHANNEL_1);
@@ -227,49 +271,18 @@ int main(void)
 	createChar(4, upDot2);
 	createChar(5, flag);
 	
+	HAL_TIM_Base_Start_IT(&htim4);
 	
-	
-	int LEDBlink = 100;
-	while(1){
-		
-	//Writing on LCD
-	display();
-	setCursor(5,0);
-	print("DEATH RACE");
-	setCursor(6,1);
-	print("NASTARAN");
-	setCursor(7,2);
-	print("FATEME");		
-	// End of writing on the LCD
-	
-	
-	//Blinking LEDs
-	
-	__HAL_TIM_SET_COMPARE(&htim1,TIM_CHANNEL_1,LEDBlink);
-	__HAL_TIM_SET_COMPARE(&htim1,TIM_CHANNEL_2,LEDBlink);
-	__HAL_TIM_SET_COMPARE(&htim1,TIM_CHANNEL_3,LEDBlink);
-	__HAL_TIM_SET_COMPARE(&htim1,TIM_CHANNEL_4,LEDBlink);
-	__HAL_TIM_SET_COMPARE(&htim2,TIM_CHANNEL_1,LEDBlink);
-	if(LEDBlink==100)
-		LEDBlink=0;
-	else LEDBlink = 100;
-	
-	//End Blinking LEDs
-	
-	
-	HAL_Delay(500);
-	noDisplay();
-	HAL_Delay(500);
-}
-	
-	// END before start of the game
+	//HAL_TIM_Base_Start_IT(&htim3);
 
-	HAL_ADC_Start_IT(&hadc1);
+//	HAL_ADC_Start_IT(&hadc1);
 	
 	
 	
   while (1)
   {
+		
+		
 		
 			
 
@@ -326,8 +339,10 @@ void SystemClock_Config(void)
     _Error_Handler(__FILE__, __LINE__);
   }
 
-  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_TIM1|RCC_PERIPHCLK_ADC12;
+  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_TIM1|RCC_PERIPHCLK_ADC12
+                              |RCC_PERIPHCLK_ADC34;
   PeriphClkInit.Adc12ClockSelection = RCC_ADC12PLLCLK_DIV1;
+  PeriphClkInit.Adc34ClockSelection = RCC_ADC34PLLCLK_DIV1;
   PeriphClkInit.Tim1ClockSelection = RCC_TIM1CLK_HCLK;
   if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
   {
@@ -391,6 +406,57 @@ static void MX_ADC1_Init(void)
   sConfig.OffsetNumber = ADC_OFFSET_NONE;
   sConfig.Offset = 0;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
+}
+
+/* ADC3 init function */
+static void MX_ADC3_Init(void)
+{
+
+  ADC_MultiModeTypeDef multimode;
+  ADC_ChannelConfTypeDef sConfig;
+
+    /**Common config 
+    */
+  hadc3.Instance = ADC3;
+  hadc3.Init.ClockPrescaler = ADC_CLOCK_ASYNC_DIV1;
+  hadc3.Init.Resolution = ADC_RESOLUTION_12B;
+  hadc3.Init.ScanConvMode = ADC_SCAN_DISABLE;
+  hadc3.Init.ContinuousConvMode = DISABLE;
+  hadc3.Init.DiscontinuousConvMode = DISABLE;
+  hadc3.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
+  hadc3.Init.ExternalTrigConv = ADC_SOFTWARE_START;
+  hadc3.Init.DataAlign = ADC_DATAALIGN_RIGHT;
+  hadc3.Init.NbrOfConversion = 1;
+  hadc3.Init.DMAContinuousRequests = DISABLE;
+  hadc3.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
+  hadc3.Init.LowPowerAutoWait = DISABLE;
+  hadc3.Init.Overrun = ADC_OVR_DATA_OVERWRITTEN;
+  if (HAL_ADC_Init(&hadc3) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
+    /**Configure the ADC multi-mode 
+    */
+  multimode.Mode = ADC_MODE_INDEPENDENT;
+  if (HAL_ADCEx_MultiModeConfigChannel(&hadc3, &multimode) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
+    /**Configure Regular Channel 
+    */
+  sConfig.Channel = ADC_CHANNEL_12;
+  sConfig.Rank = ADC_REGULAR_RANK_1;
+  sConfig.SingleDiff = ADC_SINGLE_ENDED;
+  sConfig.SamplingTime = ADC_SAMPLETIME_1CYCLE_5;
+  sConfig.OffsetNumber = ADC_OFFSET_NONE;
+  sConfig.Offset = 0;
+  if (HAL_ADC_ConfigChannel(&hadc3, &sConfig) != HAL_OK)
   {
     _Error_Handler(__FILE__, __LINE__);
   }
@@ -492,9 +558,9 @@ static void MX_TIM2_Init(void)
   TIM_OC_InitTypeDef sConfigOC;
 
   htim2.Instance = TIM2;
-  htim2.Init.Prescaler = 0;
+  htim2.Init.Prescaler = 72;
   htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim2.Init.Period = 0;
+  htim2.Init.Period = 99;
   htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_PWM_Init(&htim2) != HAL_OK)
@@ -555,6 +621,39 @@ static void MX_TIM3_Init(void)
 
 }
 
+/* TIM4 init function */
+static void MX_TIM4_Init(void)
+{
+
+  TIM_ClockConfigTypeDef sClockSourceConfig;
+  TIM_MasterConfigTypeDef sMasterConfig;
+
+  htim4.Instance = TIM4;
+  htim4.Init.Prescaler = 36000;
+  htim4.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim4.Init.Period = 1000;
+  htim4.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim4.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim4) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  if (HAL_TIM_ConfigClockSource(&htim4, &sClockSourceConfig) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim4, &sMasterConfig) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
+}
+
 /** Configure pins as 
         * Analog 
         * Input 
@@ -570,8 +669,8 @@ static void MX_GPIO_Init(void)
   /* GPIO Ports Clock Enable */
   __HAL_RCC_GPIOF_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
-  __HAL_RCC_GPIOE_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
+  __HAL_RCC_GPIOE_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOE, GPIO_PIN_8|GPIO_PIN_9|GPIO_PIN_10|GPIO_PIN_11 
