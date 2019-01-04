@@ -4,7 +4,7 @@
   * @brief   Interrupt Service Routines.
   ******************************************************************************
   *
-  * COPYRIGHT(c) 2018 STMicroelectronics
+  * COPYRIGHT(c) 2019 STMicroelectronics
   *
   * Redistribution and use in source and binary forms, with or without modification,
   * are permitted provided that the following conditions are met:
@@ -40,12 +40,20 @@
 int notStarted=1;
 extern TIM_HandleTypeDef htim1;
 extern TIM_HandleTypeDef htim2;
+extern ADC_HandleTypeDef hadc1;
+extern ADC_HandleTypeDef hadc3;
+//extern ADC_HandleTypeDef hadc2;
 int LEDBlink=100;
-int LEDCnt=0;
-int lap=0;
-int chances=8;
-int num_obs=2;
-
+int LEDCnt=-1;
+int lap=1;
+int hearts=8;
+int num_obs=3;
+int notEntered=1;
+int currentTime = 0;
+int lastCrash = -1;
+int tim4Cnt = 0;
+int PrevLeft=9;
+int seconds=0,minutes=0;
 
 
 void beforeStart(){
@@ -80,6 +88,7 @@ void beforeStart(){
 
 void ready2Start(){
 	//fill the screen
+	int delay=1000;
 	display();
 	clear();
 	for(int i=0; i<20; i++)
@@ -89,7 +98,7 @@ void ready2Start(){
 		}
 	
 	//step 2
-	HAL_Delay(500);
+	HAL_Delay(delay);
 	setCursor(8,0);
 	print("     ");
 	setCursor(7,1);
@@ -100,7 +109,7 @@ void ready2Start(){
 	print("     ");
 		
 	//step 3
-	HAL_Delay(500);
+	HAL_Delay(delay);
 	setCursor(2,0);
 	print("               ");
 	setCursor(1,1);
@@ -111,7 +120,7 @@ void ready2Start(){
 	print("               ");
 		
 	//print 3	
-	HAL_Delay(500);
+	HAL_Delay(delay);
 	clear();
 	setCursor(7,0);
 	write((0));
@@ -131,7 +140,7 @@ void ready2Start(){
 	setCursor(10,1);
 	write((1));
 	setCursor(11,1);
-	write((3));
+	write((1));
 	
 	setCursor(7,2);
 	write((2));
@@ -142,7 +151,7 @@ void ready2Start(){
 	setCursor(10,2);
 	write((2));
 	setCursor(11,2);
-	write((3));
+	write((1));
 		
 	setCursor(7,3);
 	write((0));
@@ -155,7 +164,7 @@ void ready2Start(){
 	
 	
 	//2
-	HAL_Delay(500);
+	HAL_Delay(delay);
 	clear();
 	setCursor(7,0);
 	write((0));
@@ -177,10 +186,10 @@ void ready2Start(){
 	setCursor(10,1);
 	write((1));
 	setCursor(11,1);
-	write((3));
+	write((1));
 	
 	setCursor(7,2);
-	write((4));
+	write((2));
 	setCursor(8,2);
 	write((2));
 	setCursor(9,2);
@@ -202,7 +211,7 @@ void ready2Start(){
 	write((0));
 	
 	//1
-	HAL_Delay(500);
+	HAL_Delay(delay);
 	clear();
 	setCursor(9,0);
 	write((5));
@@ -222,12 +231,126 @@ void ready2Start(){
 	write((0));
 	setCursor(12,3);
 	write((0));
+	HAL_Delay(delay);
 	notStarted=0;
 }
+
+void displayGameBackGround(){
+	clear();
+	int startRoad = 3;
+	setCursor(startRoad,0);
+	write((5));
+	setCursor(startRoad-1,1);
+	write((5));
+	setCursor(startRoad-2,2);
+	write((5));
+	setCursor(startRoad-3,3);
+	write((5));
+	
+	int endRoad = 16;
+	setCursor(endRoad,0);
+	write((6));
+	setCursor(endRoad+1,1);
+	write((6));
+	setCursor(endRoad+2,2);
+	write((6));
+	setCursor(endRoad+3,3);
+	write((6));
+	
+	
+	setCursor(endRoad+1,0);
+	write((7));
+	setCursor(endRoad+2,0);
+	print(":");
+	
+	notEntered=0;
+}
+
+
+int calculateScore(int lap,int num_obs, int currentTime, int lastCrash){
+	return 100;
+}
+
+void printCar(){
+	//Volume sensor
+	int Vol = HAL_ADC_GetValue(&hadc3);
+	HAL_ADC_Start(&hadc3);
+	//HAL_Delay(500);
+	int Left=1;
+	if(Vol/230>=1 && Vol/230<18){
+		Left = Vol/230;
+	}
+	if(PrevLeft!=Left){
+		setCursor(PrevLeft,3);
+		print("  ");
+	}
+	PrevLeft = Left;
+	if(!notEntered){
+		setCursor(Left,3);
+		write((4));
+		setCursor(Left+1,3);
+		write((3));
+	}
+//	char strVol[4];
+//	setCursor(5,2);
+//	sprintf(strVol,"%04d",Vol);
+//	print(strVol);
+}
+
+void turnOnLEDs(){
+	//LDR sensor
+
+	int LEDLight = HAL_ADC_GetValue(&hadc1);
+	HAL_ADC_Start(&hadc1);
+	int ratio = 2;
+
+
+	__HAL_TIM_SET_COMPARE(&htim1,TIM_CHANNEL_1,LEDLight/ratio);
+	__HAL_TIM_SET_COMPARE(&htim1,TIM_CHANNEL_1,LEDLight/ratio);
+	__HAL_TIM_SET_COMPARE(&htim1,TIM_CHANNEL_2,LEDLight/ratio);
+	__HAL_TIM_SET_COMPARE(&htim1,TIM_CHANNEL_3,LEDLight/ratio);
+	__HAL_TIM_SET_COMPARE(&htim1,TIM_CHANNEL_4,LEDLight/ratio);
+	__HAL_TIM_SET_COMPARE(&htim2,TIM_CHANNEL_1,LEDLight/ratio);
+	//HAL_Delay(500);
+//	char str[4];
+//	setCursor(11,2);
+//	sprintf(str,"%04d",LEDLight);
+//	print(str);
+}
+void displayGame(int lap,int score, int hearts){
+	display();
+	
+	//print score
+	char scoreStr[4];
+	setCursor(0,0);
+	sprintf(scoreStr,"%03d",score);	
+	print(scoreStr);
+	
+	//print heart
+	char heartsStr[1];
+	setCursor(19,0);
+	sprintf(heartsStr,"%d",hearts);	
+	print(heartsStr);
+	
+	//hearts--;
+	
+	HAL_Delay(500);
+	
+}
+
+//void generateObstacles(){
+//	int rnd = HAL_ADC_GetValue(&hadc2);
+//	HAL_ADC_Start(&hadc2);
+//	rnd%=
+////	char strVol[4];
+////	setCursor(12,2);
+////	sprintf(strVol,"%04d",rnd);
+////	print(strVol);
+//	
+//}
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
-extern ADC_HandleTypeDef hadc1;
 extern TIM_HandleTypeDef htim3;
 extern TIM_HandleTypeDef htim4;
 
@@ -400,21 +523,6 @@ void EXTI0_IRQHandler(void)
 }
 
 /**
-* @brief This function handles ADC1 and ADC2 interrupts.
-*/
-void ADC1_2_IRQHandler(void)
-{
-  /* USER CODE BEGIN ADC1_2_IRQn 0 */
-
-  /* USER CODE END ADC1_2_IRQn 0 */
-  HAL_ADC_IRQHandler(&hadc1);
-  /* USER CODE BEGIN ADC1_2_IRQn 1 */
-
-
-  /* USER CODE END ADC1_2_IRQn 1 */
-}
-
-/**
 * @brief This function handles TIM3 global interrupt.
 */
 void TIM3_IRQHandler(void)
@@ -424,8 +532,8 @@ void TIM3_IRQHandler(void)
   /* USER CODE END TIM3_IRQn 0 */
   HAL_TIM_IRQHandler(&htim3);
   /* USER CODE BEGIN TIM3_IRQn 1 */
-//	int count = __HAL_TIM_GET_COUNTER(&htim3);
-//	lap++;
+//	HAL_ADC_Start_IT(&hadc1);
+//	HAL_ADC_Start_IT(&hadc3);
 	
 	
   /* USER CODE END TIM3_IRQn 1 */
@@ -441,14 +549,37 @@ void TIM4_IRQHandler(void)
   /* USER CODE END TIM4_IRQn 0 */
   HAL_TIM_IRQHandler(&htim4);
   /* USER CODE BEGIN TIM4_IRQn 1 */
+	HAL_GPIO_TogglePin(GPIOE,GPIO_PIN_8);
 	
-	
+	turnOnLEDs();
+	printCar();
+
 	if(notStarted){
 		beforeStart();
+		//HAL_Delay(500);
 	}
-	else{
-		HAL_ADC_Start_IT(&hadc1);
+	
+	else{   // The game started!
+		//displayGame();
+		if(notEntered){
+			displayGameBackGround();
+			
+		}
+		
+		if(tim4Cnt%30==0){ //each 15 seconds
+			int score = calculateScore(lap,num_obs,currentTime,lastCrash);
+			displayGame(lap,score,hearts);
+			//generateObstacles();
+			
+			
+			lap++;
+			num_obs++;
+		}
+		
+		
+		tim4Cnt++;
 	}
+	
 	
 	
 	

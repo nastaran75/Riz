@@ -10,7 +10,7 @@
   * inserted by the user or by software development tools
   * are owned by their respective copyright owners.
   *
-  * COPYRIGHT(c) 2018 STMicroelectronics
+  * COPYRIGHT(c) 2019 STMicroelectronics
   *
   * Redistribution and use in source and binary forms, with or without modification,
   * are permitted provided that the following conditions are met:
@@ -48,6 +48,7 @@
 
 /* Private variables ---------------------------------------------------------*/
 ADC_HandleTypeDef hadc1;
+ADC_HandleTypeDef hadc2;
 ADC_HandleTypeDef hadc3;
 
 TIM_HandleTypeDef htim1;
@@ -73,6 +74,7 @@ static void MX_TIM2_Init(void);
 static void MX_TIM3_Init(void);
 static void MX_TIM4_Init(void);
 static void MX_ADC3_Init(void);
+static void MX_ADC2_Init(void);
 
 void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
                                 
@@ -80,6 +82,40 @@ void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
+
+byte diagonalRight[8] = {
+	0x03,
+	0x07,
+	0x06,
+	0x0E,
+	0x0C,
+	0x1C,
+	0x18,
+	0x10
+};
+
+byte diagonalLeft[8] = {
+	0x18,
+	0x1C,
+	0x0C,
+	0x0E,
+	0x06,
+	0x07,
+	0x03,
+	0x01
+};
+
+byte heart[8] = {
+	0x00,
+	0x0A,
+	0x1F,
+	0x1F,
+	0x1F,
+	0x1F,
+	0x0E,
+	0x04
+};
+
 
 byte dot[8] = {
 	0x1F,
@@ -114,27 +150,27 @@ byte upDot[8] = {
 	0x00
 };
 
-byte downDot2[8] = {
-	0x00,
-	0x1E,
-	0x1E,
-	0x1E,
-	0x1E,
-	0x1E,
-	0x1E,
-	0x00
-};
+//byte downDot2[8] = {
+//	0x00,
+//	0x1E,
+//	0x1E,
+//	0x1E,
+//	0x1E,
+//	0x1E,
+//	0x1E,
+//	0x00
+//};
 
-byte upDot2[8] = {
-	0x1F,
-	0x1F,
-	0x1F,
-	0x1F,
-	0x1F,
-	0x1F,
-	0x00,
-	0x00
-};
+//byte upDot2[8] = {
+//	0x1F,
+//	0x1F,
+//	0x1F,
+//	0x1F,
+//	0x1F,
+//	0x1F,
+//	0x00,
+//	0x00
+//};
 
 byte flag[8] = {
 	0x01,
@@ -147,26 +183,59 @@ byte flag[8] = {
 	0x1F
 };
 
-void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc){
-	if(hadc->Instance==ADC1){
-		int i = HAL_ADC_GetValue(&hadc1);
-		//int num = ;
-		HAL_ADC_Start(&hadc1);
-		//char str[4];
-		//str[0] = ' ';
-//		setCursor(0,0);
+byte carRight[8] = {
+	0x1C,
+	0x04,
+	0x04,
+	0x1E,
+	0x19,
+	0x19,
+	0x06,
+	0x06
+};
+
+byte carLeft[8] = {
+	0x07,
+	0x04,
+	0x04,
+	0x1F,
+	0x13,
+	0x13,
+	0x0C,
+	0x0C
+};
+
+//void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc){
+//	if(hadc->Instance==ADC1){
+//		int i = HAL_ADC_GetValue(&hadc1);
+//		//int num = ;
+//		HAL_ADC_Start(&hadc1);
+//		//char str[4];
+//		//str[0] = ' ';
+////		setCursor(0,0);
+////		sprintf(str,"%03d",i);
+////		print(str);
+//		HAL_Delay(300);
+//		__HAL_TIM_SET_COMPARE(&htim1,TIM_CHANNEL_1,i/10);
+//		__HAL_TIM_SET_COMPARE(&htim1,TIM_CHANNEL_2,i/10);
+//		__HAL_TIM_SET_COMPARE(&htim1,TIM_CHANNEL_3,i/10);
+//		__HAL_TIM_SET_COMPARE(&htim1,TIM_CHANNEL_4,i/10);
+//		__HAL_TIM_SET_COMPARE(&htim2,TIM_CHANNEL_1,i/10);
+//	
+//	}
+////	
+//	if(hadc->Instance==ADC3){
+//		int i = HAL_ADC_GetValue(&hadc3);
+//		HAL_ADC_Start(&hadc3);
+//		HAL_Delay(500);
+//		char str[4];
+//		setCursor(1,4);
 //		sprintf(str,"%03d",i);
 //		print(str);
-		HAL_Delay(300);
-		__HAL_TIM_SET_COMPARE(&htim1,TIM_CHANNEL_1,i/10);
-		__HAL_TIM_SET_COMPARE(&htim1,TIM_CHANNEL_2,i/10);
-		__HAL_TIM_SET_COMPARE(&htim1,TIM_CHANNEL_3,i/10);
-		__HAL_TIM_SET_COMPARE(&htim1,TIM_CHANNEL_4,i/10);
-		__HAL_TIM_SET_COMPARE(&htim2,TIM_CHANNEL_1,i/10);
-	
-	HAL_ADC_Start_IT(hadc);
-	}
-}
+//		
+//	}
+//	HAL_ADC_Start_IT(hadc);
+//}
 
 //void beforeStart(int LEDBlink,int BeforeStart){
 //		char str[1];
@@ -246,6 +315,7 @@ int main(void)
   MX_TIM3_Init();
   MX_TIM4_Init();
   MX_ADC3_Init();
+  MX_ADC2_Init();
   /* USER CODE BEGIN 2 */
 	
 	HAL_TIM_PWM_Start(&htim1,TIM_CHANNEL_1);
@@ -267,16 +337,22 @@ int main(void)
 	createChar(0, dot);
 	createChar(1, downDot);
 	createChar(2, upDot);
-	createChar(3, downDot2);
-	createChar(4, upDot2);
-	createChar(5, flag);
+	createChar(3, carRight);
+	createChar(4, carLeft);
+	createChar(5, diagonalRight);
+	createChar(6, diagonalLeft);
+	createChar(7, heart);
+	
 	
 	HAL_TIM_Base_Start_IT(&htim4);
+	
+	HAL_ADC_Start(&hadc1);
+	HAL_ADC_Start(&hadc3);
 	
 	//HAL_TIM_Base_Start_IT(&htim3);
 
 //	HAL_ADC_Start_IT(&hadc1);
-	
+// duset daram :( :-*
 	
 	
   while (1)
@@ -412,6 +488,48 @@ static void MX_ADC1_Init(void)
 
 }
 
+/* ADC2 init function */
+static void MX_ADC2_Init(void)
+{
+
+  ADC_ChannelConfTypeDef sConfig;
+
+    /**Common config 
+    */
+  hadc2.Instance = ADC2;
+  hadc2.Init.ClockPrescaler = ADC_CLOCK_ASYNC_DIV1;
+  hadc2.Init.Resolution = ADC_RESOLUTION_12B;
+  hadc2.Init.ScanConvMode = ADC_SCAN_DISABLE;
+  hadc2.Init.ContinuousConvMode = DISABLE;
+  hadc2.Init.DiscontinuousConvMode = DISABLE;
+  hadc2.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
+  hadc2.Init.ExternalTrigConv = ADC_SOFTWARE_START;
+  hadc2.Init.DataAlign = ADC_DATAALIGN_RIGHT;
+  hadc2.Init.NbrOfConversion = 1;
+  hadc2.Init.DMAContinuousRequests = DISABLE;
+  hadc2.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
+  hadc2.Init.LowPowerAutoWait = DISABLE;
+  hadc2.Init.Overrun = ADC_OVR_DATA_OVERWRITTEN;
+  if (HAL_ADC_Init(&hadc2) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
+    /**Configure Regular Channel 
+    */
+  sConfig.Channel = ADC_CHANNEL_1;
+  sConfig.Rank = ADC_REGULAR_RANK_1;
+  sConfig.SingleDiff = ADC_SINGLE_ENDED;
+  sConfig.SamplingTime = ADC_SAMPLETIME_601CYCLES_5;
+  sConfig.OffsetNumber = ADC_OFFSET_NONE;
+  sConfig.Offset = 0;
+  if (HAL_ADC_ConfigChannel(&hadc2, &sConfig) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
+}
+
 /* ADC3 init function */
 static void MX_ADC3_Init(void)
 {
@@ -453,7 +571,7 @@ static void MX_ADC3_Init(void)
   sConfig.Channel = ADC_CHANNEL_12;
   sConfig.Rank = ADC_REGULAR_RANK_1;
   sConfig.SingleDiff = ADC_SINGLE_ENDED;
-  sConfig.SamplingTime = ADC_SAMPLETIME_1CYCLE_5;
+  sConfig.SamplingTime = ADC_SAMPLETIME_601CYCLES_5;
   sConfig.OffsetNumber = ADC_OFFSET_NONE;
   sConfig.Offset = 0;
   if (HAL_ADC_ConfigChannel(&hadc3, &sConfig) != HAL_OK)
@@ -596,9 +714,9 @@ static void MX_TIM3_Init(void)
   TIM_MasterConfigTypeDef sMasterConfig;
 
   htim3.Instance = TIM3;
-  htim3.Init.Prescaler = 36000;
+  htim3.Init.Prescaler = 360;
   htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim3.Init.Period = 30000;
+  htim3.Init.Period = 1000;
   htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim3) != HAL_OK)
@@ -631,7 +749,7 @@ static void MX_TIM4_Init(void)
   htim4.Instance = TIM4;
   htim4.Init.Prescaler = 36000;
   htim4.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim4.Init.Period = 1000;
+  htim4.Init.Period = 999;
   htim4.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim4.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim4) != HAL_OK)
